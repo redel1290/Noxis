@@ -9,69 +9,64 @@ data class NoxisWindow(
     val id: String,
     val title: String,
     val icon: String = "📄",
-    var position: DpOffset = DpOffset(50.dp, 50.dp),
-    var size: DpSize = DpSize(400.dp, 300.dp),
-    var isMinimized: Boolean = false,
-    var isMaximized: Boolean = false,
-    var isFocused: Boolean = false,
+    val position: DpOffset = DpOffset(60.dp, 40.dp),
+    val size: DpSize = DpSize(500.dp, 350.dp),
+    val isMinimized: Boolean = false,
+    val isMaximized: Boolean = false,
+    val isFocused: Boolean = true,
     val content: @Composable () -> Unit
 )
 
 class WindowManager {
     val windows = mutableStateListOf<NoxisWindow>()
-    var maxWindows = 15
+    private val MAX_WINDOWS = 15
 
-    fun openWindow(window: NoxisWindow) {
-        if (windows.size >= maxWindows) return
-        // Зміщення нових вікон щоб не накладались
-        val offset = DpOffset(
-            (50 + windows.size * 20).dp,
-            (50 + windows.size * 20).dp
-        )
-        focusWindow(window.id)
-        windows.add(window.copy(position = offset, isFocused = true))
+    fun open(id: String, title: String, icon: String, size: DpSize = DpSize(500.dp, 350.dp), content: @Composable () -> Unit) {
+        if (windows.size >= MAX_WINDOWS) return
+        // Якщо вже відкрите — просто фокусуємо
+        val existing = windows.indexOfFirst { it.id == id }
+        if (existing >= 0) {
+            bringToFront(id)
+            return
+        }
+        val offset = DpOffset((60 + windows.size * 30).dp, (40 + windows.size * 20).dp)
+        unfocusAll()
+        windows.add(NoxisWindow(id = id, title = title, icon = icon, position = offset, size = size, isFocused = true, content = content))
     }
 
-    fun closeWindow(id: String) {
-        windows.removeAll { it.id == id }
+    fun close(id: String) = windows.removeAll { it.id == id }
+
+    fun minimize(id: String) {
+        val i = windows.indexOfFirst { it.id == id }
+        if (i >= 0) windows[i] = windows[i].copy(isMinimized = true, isFocused = false)
     }
 
-    fun minimizeWindow(id: String) {
-        val idx = windows.indexOfFirst { it.id == id }
-        if (idx >= 0) windows[idx] = windows[idx].copy(isMinimized = true, isFocused = false)
+    fun toggleMaximize(id: String) {
+        val i = windows.indexOfFirst { it.id == id }
+        if (i >= 0) windows[i] = windows[i].copy(isMaximized = !windows[i].isMaximized)
     }
 
-    fun maximizeWindow(id: String) {
-        val idx = windows.indexOfFirst { it.id == id }
-        if (idx >= 0) {
-            val w = windows[idx]
-            windows[idx] = w.copy(isMaximized = !w.isMaximized)
+    fun restore(id: String) {
+        val i = windows.indexOfFirst { it.id == id }
+        if (i >= 0) {
+            unfocusAll()
+            windows[i] = windows[i].copy(isMinimized = false, isFocused = true)
         }
     }
 
-    fun focusWindow(id: String) {
-        windows.replaceAll { it.copy(isFocused = it.id == id) }
-    }
-
-    fun restoreWindow(id: String) {
-        val idx = windows.indexOfFirst { it.id == id }
-        if (idx >= 0) windows[idx] = windows[idx].copy(isMinimized = false, isFocused = true)
-    }
-
-    fun updatePosition(id: String, offset: DpOffset) {
-        val idx = windows.indexOfFirst { it.id == id }
-        if (idx >= 0) windows[idx] = windows[idx].copy(position = offset)
-    }
-
-    fun updateSize(id: String, size: DpSize) {
-        val idx = windows.indexOfFirst { it.id == id }
-        if (idx >= 0) windows[idx] = windows[idx].copy(size = size)
-    }
-
     fun bringToFront(id: String) {
-        val window = windows.find { it.id == id } ?: return
-        windows.remove(window)
-        windows.add(window.copy(isFocused = true))
-        focusWindow(id)
+        val w = windows.find { it.id == id } ?: return
+        windows.remove(w)
+        unfocusAll()
+        windows.add(w.copy(isFocused = true, isMinimized = false))
+    }
+
+    fun updatePosition(id: String, pos: DpOffset) {
+        val i = windows.indexOfFirst { it.id == id }
+        if (i >= 0) windows[i] = windows[i].copy(position = pos)
+    }
+
+    private fun unfocusAll() {
+        for (i in windows.indices) windows[i] = windows[i].copy(isFocused = false)
     }
 }

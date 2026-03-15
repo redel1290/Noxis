@@ -1,8 +1,6 @@
 package com.noxis.ui.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -14,114 +12,69 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
-import com.noxis.ui.window.WindowManager
 
-data class DesktopIcon(
-    val id: String,
-    val name: String,
-    val icon: String,
-    val gridX: Int,
-    val gridY: Int
-)
+data class DesktopIcon(val id: String, val name: String, val icon: String, val col: Int, val row: Int)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Desktop(
-    windowManager: WindowManager,
+    icons: List<DesktopIcon>,
+    onIconDoubleClick: (DesktopIcon) -> Unit,
+    onIconRemove: (DesktopIcon) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val icons = remember {
-        mutableStateListOf(
-            DesktopIcon("files", "Провідник", "📁", 0, 0),
-            DesktopIcon("settings", "Налаштування", "⚙️", 0, 1),
-            DesktopIcon("notepad", "Блокнот", "📝", 0, 2),
-            DesktopIcon("browser", "Браузер", "🌐", 0, 3),
+    var selected by remember { mutableStateOf<String?>(null) }
+    var ctxMenu by remember { mutableStateOf<DesktopIcon?>(null) }
+    var showDesktopMenu by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = modifier.combinedClickable(
+            onClick = { selected = null },
+            onLongClick = { showDesktopMenu = true }
         )
-    }
-
-    var selectedId by remember { mutableStateOf<String?>(null) }
-    var contextMenuIcon by remember { mutableStateOf<DesktopIcon?>(null) }
-
-    BoxWithConstraints(modifier = modifier) {
-        val cellSize = 80.dp
+    ) {
+        // ПКМ на робочому столі
+        DropdownMenu(expanded = showDesktopMenu, onDismissRequest = { showDesktopMenu = false }) {
+            DropdownMenuItem(text = { Text("Оновити") }, onClick = { showDesktopMenu = false })
+            DropdownMenuItem(text = { Text("Змінити шпалери") }, onClick = { showDesktopMenu = false })
+        }
 
         icons.forEach { icon ->
-            val x = (icon.gridX * (cellSize.value + 8)).dp
-            val y = (icon.gridY * (cellSize.value + 16)).dp
+            val x = (icon.col * 88).dp
+            val y = (icon.row * 96).dp
 
-            DesktopIconView(
-                icon = icon,
-                isSelected = selectedId == icon.id,
-                modifier = Modifier.offset(x = x, y = y),
-                onClick = { selectedId = icon.id },
-                onDoubleClick = { selectedId = null },
-                onLongPress = { contextMenuIcon = icon }
-            )
-        }
-
-        contextMenuIcon?.let { icon ->
-            DropdownMenu(
-                expanded = true,
-                onDismissRequest = { contextMenuIcon = null }
-            ) {
-                DropdownMenuItem(
-                    text = { Text("Відкрити") },
-                    onClick = { contextMenuIcon = null }
-                )
-                DropdownMenuItem(
-                    text = { Text("Прибрати зі столу") },
-                    onClick = {
-                        icons.remove(icon)
-                        contextMenuIcon = null
-                    }
-                )
+            Box(modifier = Modifier.offset(x = x, y = y)) {
+                Column(
+                    modifier = Modifier
+                        .size(80.dp, 88.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(if (selected == icon.id) Color.White.copy(0.22f) else Color.Transparent)
+                        .combinedClickable(
+                            onClick = { selected = icon.id },
+                            onDoubleClick = { selected = null; onIconDoubleClick(icon) },
+                            onLongClick = { ctxMenu = icon }
+                        )
+                        .padding(4.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(icon.icon, fontSize = 34.sp)
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        icon.name, fontSize = 11.sp, color = Color.White,
+                        textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                        style = LocalTextStyle.current.copy(shadow = Shadow(Color.Black.copy(0.9f), blurRadius = 5f))
+                    )
+                }
             }
         }
-    }
-}
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun DesktopIconView(
-    icon: DesktopIcon,
-    isSelected: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-    onDoubleClick: () -> Unit,
-    onLongPress: () -> Unit
-) {
-    Column(
-        modifier = modifier
-            .size(80.dp, 90.dp)
-            .clip(RoundedCornerShape(6.dp))
-            .background(
-                if (isSelected) Color.White.copy(alpha = 0.2f)
-                else Color.Transparent
-            )
-            .combinedClickable(
-                onClick = onClick,
-                onDoubleClick = onDoubleClick,
-                onLongClick = onLongPress
-            )
-            .padding(4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(text = icon.icon, fontSize = 36.sp)
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = icon.name,
-            fontSize = 11.sp,
-            color = Color.White,
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            style = LocalTextStyle.current.copy(
-                shadow = Shadow(
-                    color = Color.Black.copy(alpha = 0.8f),
-                    blurRadius = 4f
-                )
-            )
-        )
+        // ПКМ на іконці
+        ctxMenu?.let { ic ->
+            DropdownMenu(expanded = true, onDismissRequest = { ctxMenu = null }) {
+                DropdownMenuItem(text = { Text("Відкрити") }, onClick = { onIconDoubleClick(ic); ctxMenu = null })
+                DropdownMenuItem(text = { Text("Прибрати зі столу") }, onClick = { onIconRemove(ic); ctxMenu = null })
+            }
+        }
     }
 }
