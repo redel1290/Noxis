@@ -46,8 +46,8 @@ fun NotifItem(n: NoxisNotif, onDismiss: () -> Unit) {
     }
     AnimatedVisibility(
         visible = visible,
-        enter = slideInHorizontally({ it }) + fadeIn(tween(200)),
-        exit = slideOutHorizontally({ it }) + fadeOut(tween(200))
+        enter = slideInHorizontally(animationSpec = tween(200)) { it } + fadeIn(tween(200)),
+        exit = slideOutHorizontally(animationSpec = tween(200)) { it } + fadeOut(tween(200))
     ) {
         val accent = when (n.type) {
             NotifType.SUCCESS -> Color(0xFF4CAF50)

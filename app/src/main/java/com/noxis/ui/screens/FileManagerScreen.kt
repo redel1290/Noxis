@@ -1,33 +1,34 @@
 package com.noxis.ui.screens
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FileManagerScreen(startPath: String = "/storage/emulated/0/Noxis") {
     var currentPath by remember { mutableStateOf(startPath) }
-    val dir = remember(currentPath) { File(currentPath) }
     val files = remember(currentPath) {
-        dir.listFiles()?.sortedWith(compareBy({ !it.isDirectory }, { it.name.lowercase() })) ?: emptyList()
+        File(currentPath).listFiles()
+            ?.sortedWith(compareBy({ !it.isDirectory }, { it.name.lowercase() }))
+            ?: emptyList()
     }
     var ctxFile by remember { mutableStateOf<File?>(null) }
 
     Column(Modifier.fillMaxSize()) {
-        // Хлібні крихти
+        // Шлях
         Row(
             Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant).padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -100,10 +101,8 @@ fun FileManagerScreen(startPath: String = "/storage/emulated/0/Noxis") {
     }
 }
 
-fun formatSize(bytes: Long): String {
-    return when {
-        bytes < 1024 -> "$bytes Б"
-        bytes < 1024 * 1024 -> "${bytes / 1024} КБ"
-        else -> "${bytes / (1024 * 1024)} МБ"
-    }
+fun formatSize(bytes: Long): String = when {
+    bytes < 1024 -> "$bytes Б"
+    bytes < 1024 * 1024 -> "${bytes / 1024} КБ"
+    else -> "${bytes / (1024 * 1024)} МБ"
 }
