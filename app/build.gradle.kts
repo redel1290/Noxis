@@ -53,4 +53,5 @@ dependencies {
     implementation(libs.kotlinx.coroutines)
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.security.crypto)
+    implementation(libs.androidx.appcompat)
 }
