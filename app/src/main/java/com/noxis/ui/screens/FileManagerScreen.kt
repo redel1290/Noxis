@@ -1,6 +1,7 @@
 package com.noxis.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -62,7 +63,7 @@ fun FileManagerScreen(startPath: String = "/storage/emulated/0/Noxis") {
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Icon(
-                            if (file.isDirectory) Icons.Default.Folder else Icons.Default.InsertDriveFile,
+                            if (file.isDirectory) Icons.Default.Folder else Icons.Default.List,
                             null,
                             tint = if (file.isDirectory) Color(0xFFFFC107) else MaterialTheme.colorScheme.onSurface.copy(0.7f),
                             modifier = Modifier.size(20.dp)
@@ -88,7 +89,7 @@ fun FileManagerScreen(startPath: String = "/storage/emulated/0/Noxis") {
     ctxFile?.let { file ->
         DropdownMenu(expanded = true, onDismissRequest = { ctxFile = null }) {
             DropdownMenuItem(
-                leadingIcon = { Icon(Icons.Default.DriveFileRenameOutline, null) },
+                leadingIcon = { Icon(Icons.Default.Edit, null) },
                 text = { Text("Перейменувати") },
                 onClick = { ctxFile = null }
             )

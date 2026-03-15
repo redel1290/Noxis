@@ -29,7 +29,7 @@ fun SettingsScreen(prefs: NoxisPreferences) {
         // Тема
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.DarkMode, null)
+                Icon(Icons.Default.Star, null)
                 Text("Темна тема")
             }
             Switch(checked = isDark, onCheckedChange = { scope.launch { prefs.setDarkTheme(it) } })

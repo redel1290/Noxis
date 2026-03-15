@@ -49,7 +49,7 @@ fun Taskbar(
                         .clickable { showStart = !showStart },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Apps, null, tint = Color.White, modifier = Modifier.size(22.dp))
+                    Icon(Icons.Default.Menu, null, tint = Color.White, modifier = Modifier.size(22.dp))
                 }
                 DropdownMenu(expanded = showStart, onDismissRequest = { showStart = false }) {
                     Text("  Noxis", fontWeight = FontWeight.Bold, fontSize = 14.sp,
@@ -66,7 +66,7 @@ fun Taskbar(
                         onClick = { showStart = false; onOpenNotepad() }
                     )
                     DropdownMenuItem(
-                        leadingIcon = { Icon(Icons.Default.Language, null) },
+                        leadingIcon = { Icon(Icons.Default.Search, null) },
                         text = { Text("Браузер") },
                         onClick = { showStart = false; onOpenBrowser() }
                     )
@@ -77,7 +77,7 @@ fun Taskbar(
                     )
                     HorizontalDivider()
                     DropdownMenuItem(
-                        leadingIcon = { Icon(Icons.Default.PowerSettingsNew, null, tint = Color(0xFFFF605C)) },
+                        leadingIcon = { Icon(Icons.Default.Close, null, tint = Color(0xFFFF605C)) },
                         text = { Text("Вимкнути", color = Color(0xFFFF605C)) },
                         onClick = { showStart = false; android.os.Process.killProcess(android.os.Process.myPid()) }
                     )
@@ -89,7 +89,7 @@ fun Taskbar(
             // Швидкий доступ
             QuickBtn(Icons.Default.Folder) { onOpenFileManager() }
             QuickBtn(Icons.Default.Edit) { onOpenNotepad() }
-            QuickBtn(Icons.Default.Language) { onOpenBrowser() }
+            QuickBtn(Icons.Default.Search) { onOpenBrowser() }
 
             Spacer(Modifier.width(6.dp))
             HorizontalDivider(modifier = Modifier.width(1.dp).height(28.dp), color = fg.copy(0.2f))
