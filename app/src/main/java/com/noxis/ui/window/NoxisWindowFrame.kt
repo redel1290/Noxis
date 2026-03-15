@@ -1,6 +1,5 @@
 package com.noxis.ui.window
 
-import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.*
@@ -16,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
@@ -26,7 +26,6 @@ fun NoxisWindowFrame(
     manager: WindowManager,
     screenSize: DpSize
 ) {
-    // Анімація появи
     val scale by animateFloatAsState(
         targetValue = if (window.isMinimized) 0f else 1f,
         animationSpec = spring(dampingRatio = 0.7f, stiffness = 400f),
@@ -45,7 +44,6 @@ fun NoxisWindowFrame(
     val position = if (isMaximized) DpOffset(0.dp, 0.dp) else window.position
     val size = if (isMaximized) DpSize(screenSize.width, screenSize.height - 48.dp) else window.size
 
-    // Drag offset
     var dragX by remember(window.id) { mutableFloatStateOf(0f) }
     var dragY by remember(window.id) { mutableFloatStateOf(0f) }
 
@@ -56,12 +54,13 @@ fun NoxisWindowFrame(
                 y = position.y + dragY.dp
             )
             .size(size.width, size.height)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                this.alpha = alpha
-                transformOrigin = TransformOrigin(0.5f, 0.5f)
-            }
+            .graphicsLayer(
+                scaleX = scale,
+                scaleY = scale,
+                alpha = alpha,
+                transformOriginX = 0.5f,
+                transformOriginY = 0.5f
+            )
             .shadow(
                 elevation = if (window.isFocused) 16.dp else 4.dp,
                 shape = RoundedCornerShape(8.dp)
@@ -129,7 +128,6 @@ fun NoxisWindowFrame(
                         modifier = Modifier.weight(1f)
                     )
 
-                    // Кнопки вікна
                     WindowButton(
                         onClick = { manager.minimizeWindow(window.id) },
                         color = Color(0xFFFFBD44)
@@ -156,7 +154,6 @@ fun NoxisWindowFrame(
                 }
             }
 
-            // Контент вікна
             Box(
                 modifier = Modifier
                     .fillMaxSize()

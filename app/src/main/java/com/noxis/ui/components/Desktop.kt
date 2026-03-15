@@ -1,6 +1,8 @@
 package com.noxis.ui.components
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -8,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
@@ -17,16 +20,16 @@ data class DesktopIcon(
     val id: String,
     val name: String,
     val icon: String,
-    val gridX: Int,  // колонка в сітці
-    val gridY: Int   // рядок в сітці
+    val gridX: Int,
+    val gridY: Int
 )
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Desktop(
     windowManager: WindowManager,
     modifier: Modifier = Modifier
 ) {
-    // Іконки на столі (початкові)
     val icons = remember {
         mutableStateListOf(
             DesktopIcon("files", "Провідник", "📁", 0, 0),
@@ -37,13 +40,11 @@ fun Desktop(
     }
 
     var selectedId by remember { mutableStateOf<String?>(null) }
-    var contextMenu by remember { mutableStateOf<DesktopIcon?>(null) }
-    var contextMenuOffset by remember { mutableStateOf(Offset.Zero) }
+    var contextMenuIcon by remember { mutableStateOf<DesktopIcon?>(null) }
 
     BoxWithConstraints(modifier = modifier) {
         val cellSize = 80.dp
 
-        // Іконки за сіткою
         icons.forEach { icon ->
             val x = (icon.gridX * (cellSize.value + 8)).dp
             val y = (icon.gridY * (cellSize.value + 16)).dp
@@ -53,45 +54,25 @@ fun Desktop(
                 isSelected = selectedId == icon.id,
                 modifier = Modifier.offset(x = x, y = y),
                 onClick = { selectedId = icon.id },
-                onDoubleClick = {
-                    selectedId = null
-                    // TODO: відкрити програму
-                },
-                onLongPress = { offset ->
-                    contextMenu = icon
-                    contextMenuOffset = offset
-                }
+                onDoubleClick = { selectedId = null },
+                onLongPress = { contextMenuIcon = icon }
             )
         }
 
-        // ПКМ на порожньому місці
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .combinedClickable(
-                    onClick = { selectedId = null },
-                    onLongClick = {
-                        // Контекстне меню робочого столу
-                    }
-                )
-        )
-
-        // Контекстне меню іконки
-        contextMenu?.let { icon ->
+        contextMenuIcon?.let { icon ->
             DropdownMenu(
                 expanded = true,
-                onDismissRequest = { contextMenu = null },
-                offset = DpOffset(contextMenuOffset.x.dp, contextMenuOffset.y.dp)
+                onDismissRequest = { contextMenuIcon = null }
             ) {
                 DropdownMenuItem(
                     text = { Text("Відкрити") },
-                    onClick = { contextMenu = null }
+                    onClick = { contextMenuIcon = null }
                 )
                 DropdownMenuItem(
                     text = { Text("Прибрати зі столу") },
                     onClick = {
                         icons.remove(icon)
-                        contextMenu = null
+                        contextMenuIcon = null
                     }
                 )
             }
@@ -99,6 +80,7 @@ fun Desktop(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DesktopIconView(
     icon: DesktopIcon,
@@ -106,7 +88,7 @@ fun DesktopIconView(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     onDoubleClick: () -> Unit,
-    onLongPress: (Offset) -> Unit
+    onLongPress: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -119,7 +101,7 @@ fun DesktopIconView(
             .combinedClickable(
                 onClick = onClick,
                 onDoubleClick = onDoubleClick,
-                onLongClick = { onLongPress(Offset.Zero) }
+                onLongClick = onLongPress
             )
             .padding(4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -135,7 +117,7 @@ fun DesktopIconView(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             style = LocalTextStyle.current.copy(
-                shadow = androidx.compose.ui.graphics.Shadow(
+                shadow = Shadow(
                     color = Color.Black.copy(alpha = 0.8f),
                     blurRadius = 4f
                 )
