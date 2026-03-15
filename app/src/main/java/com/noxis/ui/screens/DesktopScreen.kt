@@ -1,8 +1,7 @@
 package com.noxis.ui.screens
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Brush
@@ -10,8 +9,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.noxis.data.NoxisPreferences
 import com.noxis.ui.components.*
+import com.noxis.ui.window.WindowLayer
 import com.noxis.ui.window.WindowManager
-import com.noxis.ui.theme.*
 
 @Composable
 fun DesktopScreen(prefs: NoxisPreferences) {
@@ -21,21 +20,17 @@ fun DesktopScreen(prefs: NoxisPreferences) {
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // Шпалери (градієнт за замовчуванням)
         Wallpaper()
 
-        // Робочий стіл з іконками
         Desktop(
             windowManager = windowManager,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 48.dp) // висота таскбару
+                .padding(bottom = 48.dp)
         )
 
-        // Вікна програм
         WindowLayer(windowManager = windowManager)
 
-        // Нотифікації (знизу справа)
         NotificationLayer(
             notifications = notifications,
             modifier = Modifier
@@ -43,7 +38,6 @@ fun DesktopScreen(prefs: NoxisPreferences) {
                 .padding(bottom = 56.dp, end = 8.dp)
         )
 
-        // Таскбар знизу
         Taskbar(
             windowManager = windowManager,
             isDark = isDark,

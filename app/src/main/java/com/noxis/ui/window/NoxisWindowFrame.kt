@@ -15,7 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
@@ -31,8 +31,7 @@ fun NoxisWindowFrame(
         animationSpec = spring(dampingRatio = 0.7f, stiffness = 400f),
         label = "window_scale"
     )
-
-    val alpha by animateFloatAsState(
+    val alphaVal by animateFloatAsState(
         targetValue = if (window.isMinimized) 0f else 1f,
         animationSpec = tween(150),
         label = "window_alpha"
@@ -49,17 +48,13 @@ fun NoxisWindowFrame(
 
     Box(
         modifier = Modifier
-            .offset(
-                x = position.x + dragX.dp,
-                y = position.y + dragY.dp
-            )
+            .offset(x = position.x + dragX.dp, y = position.y + dragY.dp)
             .size(size.width, size.height)
             .graphicsLayer(
                 scaleX = scale,
                 scaleY = scale,
-                alpha = alpha,
-                transformOriginX = 0.5f,
-                transformOriginY = 0.5f
+                alpha = alphaVal,
+                transformOrigin = TransformOrigin(0.5f, 0.5f)
             )
             .shadow(
                 elevation = if (window.isFocused) 16.dp else 4.dp,
@@ -80,17 +75,13 @@ fun NoxisWindowFrame(
             }
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-
-            // Title bar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(32.dp)
                     .background(
-                        if (window.isFocused)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.surfaceVariant
+                        if (window.isFocused) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceVariant
                     )
                     .pointerInput(window.id, isMaximized) {
                         if (!isMaximized) {
@@ -114,50 +105,35 @@ fun NoxisWindowFrame(
                     }
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 8.dp),
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "${window.icon} ${window.title}",
-                        color = if (window.isFocused) Color.White
-                        else MaterialTheme.colorScheme.onSurface,
+                        color = if (window.isFocused) Color.White else MaterialTheme.colorScheme.onSurface,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.weight(1f)
                     )
-
-                    WindowButton(
-                        onClick = { manager.minimizeWindow(window.id) },
-                        color = Color(0xFFFFBD44)
-                    ) { Icon(Icons.Default.Remove, null, tint = Color.Black, modifier = Modifier.size(10.dp)) }
-
+                    WindowButton(onClick = { manager.minimizeWindow(window.id) }, color = Color(0xFFFFBD44)) {
+                        Icon(Icons.Default.Remove, null, tint = Color.Black, modifier = Modifier.size(10.dp))
+                    }
                     Spacer(modifier = Modifier.width(4.dp))
-
-                    WindowButton(
-                        onClick = { manager.maximizeWindow(window.id) },
-                        color = Color(0xFF00CA4E)
-                    ) {
+                    WindowButton(onClick = { manager.maximizeWindow(window.id) }, color = Color(0xFF00CA4E)) {
                         Icon(
                             if (isMaximized) Icons.Default.CloseFullscreen else Icons.Default.OpenInFull,
                             null, tint = Color.Black, modifier = Modifier.size(10.dp)
                         )
                     }
-
                     Spacer(modifier = Modifier.width(4.dp))
-
-                    WindowButton(
-                        onClick = { manager.closeWindow(window.id) },
-                        color = Color(0xFFFF605C)
-                    ) { Icon(Icons.Default.Close, null, tint = Color.Black, modifier = Modifier.size(10.dp)) }
+                    WindowButton(onClick = { manager.closeWindow(window.id) }, color = Color(0xFFFF605C)) {
+                        Icon(Icons.Default.Close, null, tint = Color.Black, modifier = Modifier.size(10.dp))
+                    }
                 }
             }
 
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface)
+                modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)
             ) {
                 window.content()
             }
@@ -166,11 +142,7 @@ fun NoxisWindowFrame(
 }
 
 @Composable
-fun WindowButton(
-    onClick: () -> Unit,
-    color: Color,
-    content: @Composable () -> Unit
-) {
+fun WindowButton(onClick: () -> Unit, color: Color, content: @Composable () -> Unit) {
     Box(
         modifier = Modifier
             .size(16.dp)
@@ -178,9 +150,7 @@ fun WindowButton(
             .background(color)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
-    ) {
-        content()
-    }
+    ) { content() }
 }
 
 @Composable
@@ -189,11 +159,7 @@ fun WindowLayer(windowManager: WindowManager) {
         val screenSize = DpSize(maxWidth, maxHeight)
         windowManager.windows.forEach { window ->
             key(window.id) {
-                NoxisWindowFrame(
-                    window = window,
-                    manager = windowManager,
-                    screenSize = screenSize
-                )
+                NoxisWindowFrame(window = window, manager = windowManager, screenSize = screenSize)
             }
         }
     }
