@@ -15,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
@@ -50,12 +49,8 @@ fun NoxisWindowFrame(
         modifier = Modifier
             .offset(x = position.x + dragX.dp, y = position.y + dragY.dp)
             .size(size.width, size.height)
-            .graphicsLayer(
-                scaleX = scale,
-                scaleY = scale,
-                alpha = alphaVal,
-                transformOrigin = TransformOrigin(0.5f, 0.5f)
-            )
+            .scale(scale)
+            .alpha(alphaVal)
             .shadow(
                 elevation = if (window.isFocused) 16.dp else 4.dp,
                 shape = RoundedCornerShape(8.dp)
