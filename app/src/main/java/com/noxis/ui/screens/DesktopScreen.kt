@@ -10,15 +10,15 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.noxis.data.NoxisPreferences
 import com.noxis.ui.components.*
-import com.noxis.ui.window.WindowManager
 import com.noxis.ui.window.WindowLayer
+import com.noxis.ui.window.WindowManager
 
 @Composable
 fun DesktopScreen(prefs: NoxisPreferences) {
     val isDark by prefs.isDarkTheme.collectAsState(initial = false)
-    val manager = remember { WindowManager() }
+    val mgr = remember { WindowManager() }
     val notifs = remember { mutableStateListOf<NoxisNotif>() }
-    val desktopIcons = remember {
+    val icons = remember {
         mutableStateListOf(
             DesktopIcon("files", "Провідник", "📁", 0, 0),
             DesktopIcon("notepad", "Блокнот", "📝", 0, 1),
@@ -27,62 +27,39 @@ fun DesktopScreen(prefs: NoxisPreferences) {
         )
     }
 
-    fun openFileManager() = manager.open("files", "Провідник", "📁", DpSize(600.dp, 400.dp)) {
-        FileManagerScreen()
-    }
-    fun openNotepad() = manager.open("notepad", "Блокнот", "📝", DpSize(500.dp, 350.dp)) {
-        NotepadScreen()
-    }
-    fun openBrowser() = manager.open("browser", "Браузер", "🌐", DpSize(700.dp, 450.dp)) {
-        BrowserScreen()
-    }
-    fun openSettings() = manager.open("settings", "Налаштування", "⚙️", DpSize(450.dp, 400.dp)) {
-        SettingsScreen(prefs)
-    }
+    fun openFiles() = mgr.open("files", "Провідник", "📁", DpSize(480.dp, 300.dp)) { FileManagerScreen() }
+    fun openNotepad() = mgr.open("notepad", "Блокнот", "📝", DpSize(380.dp, 260.dp)) { NotepadScreen() }
+    fun openBrowser() = mgr.open("browser", "Браузер", "🌐", DpSize(560.dp, 340.dp)) { BrowserScreen() }
+    fun openSettings() = mgr.open("settings", "Налаштування", "⚙️", DpSize(340.dp, 300.dp)) { SettingsScreen(prefs) }
 
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+    BoxWithConstraints(Modifier.fillMaxSize()) {
         val sw = maxWidth
         val sh = maxHeight
 
         // Шпалери
-        Box(
-            Modifier.fillMaxSize().background(
-                Brush.linearGradient(listOf(Color(0xFF00C6FF), Color(0xFF0072FF), Color(0xFF7F00FF), Color(0xFFE100FF)))
-            )
-        )
+        Box(Modifier.fillMaxSize().background(
+            Brush.linearGradient(listOf(Color(0xFF0078D4), Color(0xFF005A9E), Color(0xFF003A6E)))
+        ))
 
-        // Іконки на столі
+        // Іконки
         Desktop(
-            icons = desktopIcons,
-            onIconDoubleClick = { icon ->
-                when (icon.id) {
-                    "files" -> openFileManager()
-                    "notepad" -> openNotepad()
-                    "browser" -> openBrowser()
-                    "settings" -> openSettings()
-                }
-            },
-            onIconRemove = { desktopIcons.remove(it) },
-            modifier = Modifier.fillMaxSize().padding(bottom = 48.dp)
+            icons = icons,
+            onOpen = { when (it.id) { "files" -> openFiles(); "notepad" -> openNotepad(); "browser" -> openBrowser(); "settings" -> openSettings() } },
+            onRemove = { icons.remove(it) },
+            modifier = Modifier.fillMaxSize().padding(bottom = 40.dp).padding(8.dp)
         )
 
         // Вікна
-        WindowLayer(manager = manager, screenW = sw, screenH = sh)
+        WindowLayer(mgr = mgr, sw = sw, sh = sh)
 
         // Нотифікації
-        NotificationLayer(
-            notifs = notifs,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = 56.dp, end = 8.dp)
-        )
+        NotificationLayer(notifs = notifs, modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = 48.dp, end = 6.dp))
 
-        // Таскбар
+        // Таскбар знизу
         Taskbar(
-            manager = manager,
-            isDark = isDark,
-            onOpenFileManager = ::openFileManager,
-            onOpenNotepad = ::openNotepad,
-            onOpenBrowser = ::openBrowser,
-            onOpenSettings = ::openSettings,
+            mgr = mgr, isDark = isDark,
+            onOpenFiles = ::openFiles, onOpenNotepad = ::openNotepad,
+            onOpenBrowser = ::openBrowser, onOpenSettings = ::openSettings,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }

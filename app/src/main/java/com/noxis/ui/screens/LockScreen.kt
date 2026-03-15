@@ -1,6 +1,5 @@
 package com.noxis.ui.screens
 
-import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,150 +26,131 @@ fun LockScreen(prefs: NoxisPreferences, onUnlock: () -> Unit) {
     val passwordHash by prefs.passwordHash.collectAsState(initial = null)
     var input by remember { mutableStateOf("") }
     var confirmInput by remember { mutableStateOf("") }
+    var nameInput by remember { mutableStateOf("") }
     var showPw by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf("") }
 
-    // null = ще не завантажилось, "" = пароль не встановлено
-    val isFirst = passwordHash == ""
     val isLoading = passwordHash == null
-
+    val isFirst = passwordHash == ""
     if (isLoading) return
 
     Box(
         modifier = Modifier.fillMaxSize().background(
-            Brush.linearGradient(listOf(Color(0xFF1A1A2E), Color(0xFF16213E), Color(0xFF0F3460)))
+            Brush.linearGradient(listOf(Color(0xFF0078D4), Color(0xFF005A9E), Color(0xFF003A6E)))
         ),
         contentAlignment = Alignment.Center
     ) {
-        // Горизонтальний layout для landscape
         Row(
-            modifier = Modifier.fillMaxSize().padding(24.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 32.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Ліва частина — аватар + ім'я
+            // Аватар + ім'я
             Column(
-                modifier = Modifier.width(160.dp),
+                modifier = Modifier.width(120.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Box(
-                    Modifier.size(64.dp).clip(RoundedCornerShape(32.dp))
-                        .background(Color.White.copy(0.15f)),
+                    Modifier.size(56.dp).clip(RoundedCornerShape(28.dp))
+                        .background(Color.White.copy(0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Person, null, tint = Color.White, modifier = Modifier.size(40.dp))
+                    Icon(Icons.Default.Person, null, tint = Color.White, modifier = Modifier.size(36.dp))
                 }
-                Text(
-                    if (isFirst) "Noxis" else username,
-                    color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Medium
-                )
-                if (isFirst) Text(
-                    "Перший запуск\nВстанови пароль",
-                    color = Color.White.copy(0.6f), fontSize = 11.sp
-                )
+                Text(if (isFirst) "Noxis" else username, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                if (isFirst) Text("Перший запуск", color = Color.White.copy(0.7f), fontSize = 10.sp)
             }
 
-            Spacer(Modifier.width(32.dp))
+            Spacer(Modifier.width(40.dp))
 
-            // Права частина — поля вводу
+            // Форма
             Column(
-                modifier = Modifier.width(280.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                modifier = Modifier.width(260.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Поле імені (тільки при першому запуску)
                 if (isFirst) {
-                    var nameInput by remember { mutableStateOf("") }
-                    OutlinedTextField(
-                        value = nameInput,
-                        onValueChange = { nameInput = it },
-                        label = { Text("Ім'я користувача", color = Color.White.copy(0.7f)) },
-                        singleLine = true,
-                        colors = fieldColors(),
-                        modifier = Modifier.fillMaxWidth(),
-                        leadingIcon = { Icon(Icons.Default.Person, null, tint = Color.White.copy(0.6f)) }
-                    )
-                    LaunchedEffect(nameInput) {
-                        if (nameInput.isNotEmpty()) prefs.setUsername(nameInput)
-                    }
+                    WinTextField(value = nameInput, onValueChange = { nameInput = it }, label = "Ім'я користувача")
                 }
-
-                // Поле пароля
-                OutlinedTextField(
-                    value = input,
-                    onValueChange = { input = it; error = "" },
-                    label = { Text(if (isFirst) "Новий пароль" else "Пароль", color = Color.White.copy(0.7f)) },
-                    visualTransformation = if (showPw) VisualTransformation.None else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        IconButton(onClick = { showPw = !showPw }) {
-                            Icon(
-                                if (showPw) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                null, tint = Color.White.copy(0.6f)
-                            )
-                        }
-                    },
-                    singleLine = true,
-                    isError = error.isNotEmpty(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = {
-                        scope.launch { tryLogin(isFirst, input, confirmInput, passwordHash ?: "", prefs, onUnlock) { error = it } }
-                    }),
-                    colors = fieldColors(),
-                    modifier = Modifier.fillMaxWidth()
+                WinTextField(
+                    value = input, onValueChange = { input = it; error = "" },
+                    label = if (isFirst) "Пароль" else "PIN або пароль",
+                    isPassword = true, showPassword = showPw,
+                    onTogglePassword = { showPw = !showPw },
+                    onDone = { scope.launch { doLogin(isFirst, input, confirmInput, nameInput, passwordHash ?: "", prefs, onUnlock) { error = it } } }
                 )
-
-                // Підтвердження пароля (тільки перший запуск)
                 if (isFirst) {
-                    OutlinedTextField(
-                        value = confirmInput,
-                        onValueChange = { confirmInput = it; error = "" },
-                        label = { Text("Підтвердити пароль", color = Color.White.copy(0.7f)) },
-                        visualTransformation = PasswordVisualTransformation(),
-                        singleLine = true,
-                        isError = error.isNotEmpty(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-                        colors = fieldColors(),
-                        modifier = Modifier.fillMaxWidth()
+                    WinTextField(
+                        value = confirmInput, onValueChange = { confirmInput = it; error = "" },
+                        label = "Підтвердити пароль", isPassword = true, showPassword = showPw,
+                        onDone = { scope.launch { doLogin(isFirst, input, confirmInput, nameInput, passwordHash ?: "", prefs, onUnlock) { error = it } } }
                     )
                 }
-
-                // Помилка
-                if (error.isNotEmpty()) {
-                    Text(error, color = Color(0xFFFF6B6B), fontSize = 12.sp)
-                }
-
-                // Кнопка
+                if (error.isNotEmpty()) Text(error, color = Color(0xFFFF6B6B), fontSize = 11.sp)
                 Button(
-                    onClick = {
-                        scope.launch { tryLogin(isFirst, input, confirmInput, passwordHash ?: "", prefs, onUnlock) { error = it } }
-                    },
-                    modifier = Modifier.fillMaxWidth().height(44.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    shape = RoundedCornerShape(8.dp)
+                    onClick = { scope.launch { doLogin(isFirst, input, confirmInput, nameInput, passwordHash ?: "", prefs, onUnlock) { error = it } } },
+                    modifier = Modifier.fillMaxWidth().height(36.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(0.25f)),
+                    shape = RoundedCornerShape(4.dp)
                 ) {
-                    Text(
-                        if (isFirst) "Встановити та увійти" else "Увійти",
-                        color = Color.White, fontWeight = FontWeight.Medium
-                    )
+                    Icon(Icons.Default.ArrowForward, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(if (isFirst) "Створити" else "Увійти", color = Color.White, fontSize = 13.sp)
                 }
             }
         }
+
+        // Час знизу
+        Text(
+            getCurrentTimeAndDate(),
+            color = Color.White.copy(0.8f), fontSize = 11.sp,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp)
+        )
     }
 }
 
-suspend fun tryLogin(
-    isFirst: Boolean,
-    input: String,
-    confirm: String,
-    hash: String,
-    prefs: NoxisPreferences,
-    onUnlock: () -> Unit,
-    onError: (String) -> Unit
+@Composable
+fun WinTextField(
+    value: String, onValueChange: (String) -> Unit, label: String,
+    isPassword: Boolean = false, showPassword: Boolean = false,
+    onTogglePassword: (() -> Unit)? = null, onDone: (() -> Unit)? = null
+) {
+    OutlinedTextField(
+        value = value, onValueChange = onValueChange,
+        label = { Text(label, fontSize = 11.sp) },
+        singleLine = true,
+        visualTransformation = if (isPassword && !showPassword) PasswordVisualTransformation() else VisualTransformation.None,
+        trailingIcon = if (isPassword && onTogglePassword != null) {{
+            IconButton(onClick = onTogglePassword, modifier = Modifier.size(32.dp)) {
+                Icon(if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility, null,
+                    modifier = Modifier.size(16.dp), tint = Color.White.copy(0.7f))
+            }
+        }} else null,
+        keyboardOptions = KeyboardOptions(
+            keyboardType = if (isPassword) KeyboardType.Password else KeyboardType.Text,
+            imeAction = ImeAction.Done
+        ),
+        keyboardActions = KeyboardActions(onDone = { onDone?.invoke() }),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+            focusedBorderColor = Color.White.copy(0.9f), unfocusedBorderColor = Color.White.copy(0.4f),
+            cursorColor = Color.White, focusedLabelColor = Color.White.copy(0.9f),
+            unfocusedLabelColor = Color.White.copy(0.5f)
+        ),
+        textStyle = androidx.compose.ui.text.TextStyle(fontSize = 13.sp),
+        modifier = Modifier.fillMaxWidth().height(52.dp)
+    )
+}
+
+suspend fun doLogin(
+    isFirst: Boolean, input: String, confirm: String, name: String,
+    hash: String, prefs: NoxisPreferences, onUnlock: () -> Unit, onError: (String) -> Unit
 ) {
     if (input.isEmpty()) { onError("Введи пароль"); return }
     if (isFirst) {
-        if (input != confirm) { onError("Паролі не збігаються"); return }
         if (input.length < 4) { onError("Мінімум 4 символи"); return }
+        if (input != confirm) { onError("Паролі не збігаються"); return }
+        if (name.isNotEmpty()) prefs.setUsername(name)
         prefs.setPasswordHash(prefs.hashPassword(input))
         onUnlock()
     } else {
@@ -179,14 +159,7 @@ suspend fun tryLogin(
     }
 }
 
-@Composable
-fun fieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = Color.White,
-    unfocusedTextColor = Color.White,
-    focusedBorderColor = Color.White.copy(0.8f),
-    unfocusedBorderColor = Color.White.copy(0.3f),
-    errorBorderColor = Color(0xFFFF6B6B),
-    cursorColor = Color.White,
-    focusedLabelColor = Color.White.copy(0.8f),
-    unfocusedLabelColor = Color.White.copy(0.5f)
-)
+fun getCurrentTimeAndDate(): String {
+    val sdf = java.text.SimpleDateFormat("EEEE, d MMMM yyyy  HH:mm", java.util.Locale("uk"))
+    return sdf.format(java.util.Date())
+}

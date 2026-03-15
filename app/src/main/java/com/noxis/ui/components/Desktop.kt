@@ -19,51 +19,49 @@ data class DesktopIcon(val id: String, val name: String, val icon: String, val c
 @Composable
 fun Desktop(
     icons: List<DesktopIcon>,
-    onIconDoubleClick: (DesktopIcon) -> Unit,
-    onIconRemove: (DesktopIcon) -> Unit,
+    onOpen: (DesktopIcon) -> Unit,
+    onRemove: (DesktopIcon) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var selected by remember { mutableStateOf<String?>(null) }
     var ctxMenu by remember { mutableStateOf<DesktopIcon?>(null) }
-    var showDesktopMenu by remember { mutableStateOf(false) }
+    var showDeskMenu by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier.combinedClickable(
-            onClick = { selected = null },
-            onLongClick = { showDesktopMenu = true }
+            onClick = { selected = null; showDeskMenu = false },
+            onLongClick = { showDeskMenu = true }
         )
     ) {
-        // ПКМ на робочому столі
-        DropdownMenu(expanded = showDesktopMenu, onDismissRequest = { showDesktopMenu = false }) {
-            DropdownMenuItem(text = { Text("Оновити") }, onClick = { showDesktopMenu = false })
-            DropdownMenuItem(text = { Text("Змінити шпалери") }, onClick = { showDesktopMenu = false })
+        // ПКМ на столі
+        DropdownMenu(expanded = showDeskMenu, onDismissRequest = { showDeskMenu = false }) {
+            DropdownMenuItem(text = { Text("Оновити", fontSize = 12.sp) }, onClick = { showDeskMenu = false })
+            DropdownMenuItem(text = { Text("Змінити шпалери", fontSize = 12.sp) }, onClick = { showDeskMenu = false })
         }
 
         icons.forEach { icon ->
-            val x = (icon.col * 88).dp
-            val y = (icon.row * 96).dp
-
-            Box(modifier = Modifier.offset(x = x, y = y)) {
+            val x = (icon.col * 76).dp
+            val y = (icon.row * 80).dp
+            Box(Modifier.offset(x = x, y = y)) {
                 Column(
-                    modifier = Modifier
-                        .size(80.dp, 88.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(if (selected == icon.id) Color.White.copy(0.22f) else Color.Transparent)
+                    modifier = Modifier.size(68.dp, 76.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(if (selected == icon.id) Color.White.copy(0.18f) else Color.Transparent)
                         .combinedClickable(
                             onClick = { selected = icon.id },
-                            onDoubleClick = { selected = null; onIconDoubleClick(icon) },
+                            onDoubleClick = { selected = null; onOpen(icon) },
                             onLongClick = { ctxMenu = icon }
                         )
                         .padding(4.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text(icon.icon, fontSize = 34.sp)
-                    Spacer(Modifier.height(3.dp))
+                    Text(icon.icon, fontSize = 28.sp)
+                    Spacer(Modifier.height(2.dp))
                     Text(
-                        icon.name, fontSize = 11.sp, color = Color.White,
+                        icon.name, fontSize = 10.sp, color = Color.White,
                         textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis,
-                        style = LocalTextStyle.current.copy(shadow = Shadow(Color.Black.copy(0.9f), blurRadius = 5f))
+                        style = LocalTextStyle.current.copy(shadow = Shadow(Color.Black.copy(0.85f), blurRadius = 4f))
                     )
                 }
             }
@@ -72,8 +70,8 @@ fun Desktop(
         // ПКМ на іконці
         ctxMenu?.let { ic ->
             DropdownMenu(expanded = true, onDismissRequest = { ctxMenu = null }) {
-                DropdownMenuItem(text = { Text("Відкрити") }, onClick = { onIconDoubleClick(ic); ctxMenu = null })
-                DropdownMenuItem(text = { Text("Прибрати зі столу") }, onClick = { onIconRemove(ic); ctxMenu = null })
+                DropdownMenuItem(text = { Text("Відкрити", fontSize = 12.sp) }, onClick = { onOpen(ic); ctxMenu = null })
+                DropdownMenuItem(text = { Text("Прибрати зі столу", fontSize = 12.sp) }, onClick = { onRemove(ic); ctxMenu = null })
             }
         }
     }
